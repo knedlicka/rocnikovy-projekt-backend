@@ -30,8 +30,7 @@ app.post('/tasks/add', async (req: Request, res: Response) => {
       res.send({ message: "Invalid body" });
       return;
     }
-    // TODO remove dummy_password, only use the one from environment
-    if (req.body.adminPassword != (process.env.ADMIN_PASSWORD ?? "dummy_password")) {
+    if (!process.env.ADMIN_PASSWORD || req.body.adminPassword != process.env.ADMIN_PASSWORD) {
       res.status(403);
       res.send({ message: "Forbidden" });
       return;
@@ -46,7 +45,7 @@ app.post('/tasks/add', async (req: Request, res: Response) => {
   } catch (e) {
     console.error(e);
     res.status(500);
-    res.send("Server error adding a task");
+    res.send({ message: "Server error adding a task" });
   }
 });
 
@@ -88,27 +87,6 @@ app.get('/tasks', async (req: Request, res: Response) => {
     console.error(e);
     res.status(500);
     res.send({ message: "Server error getting tasks" });
-  }
-});
-
-app.post('/tasks', async (req: Request, res: Response) => {
-  if (!req.body?.name || !req.body?.statement || !req.body?.deadline || !req.body?.correctSolution) {
-    res.status(400);
-    res.send("Invalid body");
-    return;
-  }
-  try {
-    await Task.create({
-      name: req.body.name as string,
-      statement: req.body.statement as string,
-      deadline: new Date(req.body.deadline as string),
-      correctSolution: req.body.correctSolution as string
-    });
-    res.send("OK");
-  } catch (e) {
-    console.error(e);
-    res.status(500);
-    res.send({ message: "Server error creating a task" });
   }
 });
 
