@@ -6,23 +6,57 @@ const port = 5000;
 
 app.use(express.json())
 
+const addCorsHeaders = (res: Response) => {
+  res.header({
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "*",
+  });
+}
+
 app.get('/', (req: Request, res: Response) => {
   res.send('Express + TypeScript Server');
 });
 
+app.options(`/tasks/add`, (req: Request, res: Response) => {
+  addCorsHeaders(res);
+  res.send({});
+});
+
+app.post('/tasks/add', async (req: Request, res: Response) => {
+  try {
+    addCorsHeaders(res);
+    if (!req.body?.name || !req.body?.statement || !req.body?.deadline || !req.body?.correctSolution || !req.body?.adminPassword) {
+      res.status(400);
+      res.send({ message: "Invalid body" });
+      return;
+    }
+    // TODO remove dummy_password, only use the one from environment
+    if (req.body.adminPassword != (process.env.ADMIN_PASSWORD ?? "dummy_password")) {
+      res.status(403);
+      res.send({ message: "Forbidden" });
+      return;
+    }
+    await Task.create({
+      name: req.body.name as string,
+      statement: req.body.statement as string,
+      deadline: new Date(req.body.deadline as string),
+      correctSolution: req.body.correctSolution as string
+    });
+    res.send({ message: "OK" });
+  } catch (e) {
+    console.error(e);
+    res.status(500);
+    res.send("Server error adding a task");
+  }
+});
+
 app.options('/tasks/check', (req: Request, res: Response) => {
-  res.header({
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "*",
-  });
+  addCorsHeaders(res);
   res.send({});
 });
 
 app.post('/tasks/check', async (req: Request, res: Response) => {
-  res.header({
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "*",
-  });
+  addCorsHeaders(res);
   try {
     const task = await Task.findOne({
       where: {
@@ -39,16 +73,13 @@ app.post('/tasks/check', async (req: Request, res: Response) => {
   } catch (e) {
     console.error(e);
     res.status(500);
-    res.send("Error checking solution");
+    res.send({ message: "Error checking solution" });
   }
 })
 
 app.get('/tasks', async (req: Request, res: Response) => {
   try {
-    res.header({
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers": "*",
-    });
+    addCorsHeaders(res);
     const tasks = await Task.findAll({
       attributes: ['name', 'statement', 'deadline']
     });
@@ -56,7 +87,7 @@ app.get('/tasks', async (req: Request, res: Response) => {
   } catch (e) {
     console.error(e);
     res.status(500);
-    res.send("Server error getting tasks");
+    res.send({ message: "Server error getting tasks" });
   }
 });
 
@@ -77,7 +108,7 @@ app.post('/tasks', async (req: Request, res: Response) => {
   } catch (e) {
     console.error(e);
     res.status(500);
-    res.send("Server error creating a task");
+    res.send({ message: "Server error creating a task" });
   }
 });
 
