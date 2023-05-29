@@ -10,7 +10,19 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Express + TypeScript Server');
 });
 
+app.options('/tasks/check', (req: Request, res: Response) => {
+  res.header({
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "*",
+  });
+  res.send({});
+});
+
 app.post('/tasks/check', async (req: Request, res: Response) => {
+  res.header({
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "*",
+  });
   try {
     const task = await Task.findOne({
       where: {
@@ -31,9 +43,15 @@ app.post('/tasks/check', async (req: Request, res: Response) => {
   }
 })
 
-app.get('/tasks', (req: Request, res: Response) => {
+app.get('/tasks', async (req: Request, res: Response) => {
   try {
-    const tasks = Task.findAll();
+    res.header({
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "*",
+    });
+    const tasks = await Task.findAll({
+      attributes: ['name', 'statement', 'deadline']
+    });
     res.send({ tasks });
   } catch (e) {
     console.error(e);
