@@ -65,7 +65,7 @@ app.post('/tasks/check', async (req: Request, res: Response) => {
       raw: true
     });
     let valid = false;
-    if (task && req.body?.solution == task.correctSolution) {
+    if (task && req.body?.solution.trim() == task.correctSolution.trim()) {
       valid = true;
     }
     res.send({ valid });
